@@ -30,7 +30,7 @@ __global__ void medianFilterKernel(const cv::cuda::PtrStepSz<WORKING_TYPE[N_CHAN
         sharedmem[local_idx_y][local_idx_x] = input(row, col)[k];
      else
         sharedmem[local_idx_y][local_idx_x] = 0;
-    __syncthreads();   //Wait for all threads to be done.
+    __syncthreads();   // wait for all threads to be finished.
 
     if(!on_image)
         return;
@@ -39,17 +39,17 @@ __global__ void medianFilterKernel(const cv::cuda::PtrStepSz<WORKING_TYPE[N_CHAN
         return;
     if(local_idx_y>=BLOCK_DIM_COMPUTE || local_idx_x>=BLOCK_DIM_COMPUTE)
         return;
-    // sort neighbors
+    // pick neighbors
     float vals[MEDIAN_WIN_LEN];
     for(int win_r = -MEDIAN_HALF_WIN_SIZE; win_r<=MEDIAN_HALF_WIN_SIZE; win_r++)
         for(int win_c = -MEDIAN_HALF_WIN_SIZE; win_c<=MEDIAN_HALF_WIN_SIZE; win_c++)
             vals[(MEDIAN_HALF_WIN_SIZE+win_r)*MEDIAN_WIN_SIZE+win_c+MEDIAN_HALF_WIN_SIZE] = sharedmem[local_idx_y+win_r][local_idx_x+win_c];
 
-
+    // sorting
     for (int i = 0; i < MEDIAN_WIN_LEN; i++) {
         for (int j = i + 1; j < MEDIAN_WIN_LEN; j++) {
             if (vals[i] > vals[j]) {
-                // Swap Values.
+                // swap
                 float tmp = vals[i];
                 vals[i] = vals[j];
                 vals[j] = tmp;
